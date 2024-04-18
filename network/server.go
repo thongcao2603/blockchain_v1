@@ -6,3 +6,9 @@ type ServerOpts struct {
 
 type Server struct {
 }
+
+func NewServer(opts ServerOpts) *Server {
+	return &Server{
+		ServerOpts: opts,
+	}
+}

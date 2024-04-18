@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/thongcao2603/blockchain_v1/network"
+)
 
 //server
 //transport tcp udp
@@ -9,5 +12,9 @@ import "fmt"
 //keypair
 
 func main() {
-	fmt.Println("hello world")
+trLocal := network.NewLocalTransport("LOCAL")
+
+	opts := network.ServerOpts{
+		Transports: x,
+	}
 }
