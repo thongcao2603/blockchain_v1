@@ -76,7 +76,10 @@ func (b *Block) Hash(hasher Hasher[*Block]) types.Hash {
 func (b *Block) HeaderData() []byte {
 	buf := &bytes.Buffer{}
 	enc := gob.NewEncoder(buf)
-	enc.Encode(b.Header)
+	err := enc.Encode(b.Header)
+	if err != nil {
+		return nil
+	}
 
 	return buf.Bytes()
 }

@@ -16,12 +16,21 @@ func main() {
 	trLocal := network.NewLocalTransport("LOCAL")
 	trRemote := network.NewLocalTransport("REMOTE")
 
-	trLocal.Connect(trRemote)
-	trRemote.Connect(trLocal)
+	err := trLocal.Connect(trRemote)
+	if err != nil {
+		return
+	}
+	err1 := trRemote.Connect(trLocal)
+	if err1 != nil {
+		return
+	}
 
 	go func() {
 		for {
-			trRemote.SendMessage(trLocal.Addr(), []byte("hello world"))
+			err := trRemote.SendMessage(trLocal.Addr(), []byte("hello world"))
+			if err != nil {
+				return
+			}
 			time.Sleep(1 * time.Second)
 		}
 	}()
