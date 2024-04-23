@@ -41,6 +41,10 @@ func NewBlock(h *Header, txs []Transaction) (*Block, error) {
 	}, nil
 }
 
+func (b *Block) AddTransaction(tx *Transaction) {
+	b.Transactions = append(b.Transactions, *tx)
+}
+
 func (b *Block) Sign(privateKey crypto.PrivateKey) error {
 	sig, err := privateKey.Sign(b.Header.Bytes())
 	if err != nil {

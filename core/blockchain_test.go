@@ -43,6 +43,8 @@ func TestNewBlockchain(t *testing.T) {
 func TestHasBlock(t *testing.T) {
 	bc := newBlockChainWithGenesis(t)
 	assert.True(t, bc.HasBlock(0))
+	assert.False(t, bc.HasBlock(1))
+	assert.False(t, bc.HasBlock(100))
 }
 
 func TestGetHeader(t *testing.T) {
@@ -59,7 +61,8 @@ func TestGetHeader(t *testing.T) {
 
 func TestAddBlockToHight(t *testing.T) {
 	bc := newBlockChainWithGenesis(t)
-	assert.NotNil(t, bc.AddBlock(randomBlockWithSignature(t, 3, types.Hash{})))
+	assert.Nil(t, bc.AddBlock(randomBlockWithSignature(t, 1, getPrevBlockHash(t, bc, uint32(1)))))
+	assert.NotNil(t, bc.AddBlock(randomBlockWithSignature(t, 5, types.Hash{})))
 }
 
 func getPrevBlockHash(t *testing.T, bc *Blockchain, height uint32) types.Hash {

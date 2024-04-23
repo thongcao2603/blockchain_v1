@@ -42,7 +42,7 @@ func (bc *Blockchain) HasBlock(height uint32) bool {
 }
 
 func (bc *Blockchain) GetHeader(height uint32) (*Header, error) {
-	if height <= bc.Height() {
+	if height > bc.Height() {
 		return nil, fmt.Errorf("given height (%d) too high", height)
 	}
 
