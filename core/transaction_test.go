@@ -18,3 +18,17 @@ func TestSignTransaction(t *testing.T) {
 	assert.Equal(t, tx.Data, msg)
 	assert.NotNil(t, tx.Signature)
 }
+
+func TestVerifyTransaction(t *testing.T) {
+	msg := []byte("foo")
+	tx := &Transaction{
+		Data: msg,
+	}
+	privateKey := crypto.GeneratePrivateKey()
+	assert.Nil(t, tx.Sign(privateKey))
+	assert.Nil(t, tx.Verify())
+
+	otherPrivateKey := crypto.GeneratePrivateKey()
+	tx.PublicKey = otherPrivateKey.PublicKey()
+	assert.NotNil(t, tx.Verify())
+}
