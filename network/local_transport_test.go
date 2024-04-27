@@ -27,4 +27,5 @@ func TestSendMessage(t *testing.T) {
 	rpc := <-tra.Consume()
 
 	assert.Equal(t, rpc.Payload, msg)
+	assert.Equal(t, rpc.From, trb.Addr())
 }
