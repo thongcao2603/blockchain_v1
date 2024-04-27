@@ -15,7 +15,7 @@ func TestAddBlock(t *testing.T) {
 	bc := newBlockchainWithGenesis(t)
 
 	for i := 0; i < 1000; i++ {
-		block := RandomBlock(uint32(i + 1))
+		block := RandomBlockWithSignature(t, uint32(i+1))
 		assert.Nil(t, bc.AddBlock(block))
 
 	}
