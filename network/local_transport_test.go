@@ -9,9 +9,7 @@ func TestConnect(t *testing.T) {
 	tra := NewLocalTransport("LOCAL")
 	trb := NewLocalTransport("REMOTE")
 
-	trb.Connect(tra)
-
-	assert.Equal(t, trb.peers[tra.Addr()], tra)
+	assert.Nil(t, trb.Connect(tra))
 
 }
 
