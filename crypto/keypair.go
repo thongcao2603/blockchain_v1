@@ -6,14 +6,21 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"github.com/thongcao2603/blockchain_v1/types"
+	"math/big"
 )
 
 type PrivateKey struct {
 	Key *ecdsa.PrivateKey
 }
 
-func (k PrivateKey) Signature(data []byte) (*Signature, error) {
-	
+func (k *PrivateKey) Sign(data []byte) (*Signature, error) {
+	r, s, err := ecdsa.Sign(rand.Reader, k.Key, data)
+	if err != nil {
+		return nil, err
+	}
+	return &Signature{
+		r, s,
+	}, nil
 }
 
 func GeneratePrivateKey() PrivateKey {
@@ -25,9 +32,9 @@ func GeneratePrivateKey() PrivateKey {
 	return PrivateKey{Key: key}
 }
 
-func (p *PrivateKey) PublicKey() PublicKey {
+func (k *PrivateKey) PublicKey() PublicKey {
 	return PublicKey{
-		Key: &p.Key.PublicKey,
+		Key: &k.Key.PublicKey,
 	}
 }
 
@@ -46,4 +53,9 @@ func (k PublicKey) Address() types.Address {
 }
 
 type Signature struct {
+	r, s *big.Int
+}
+
+func (sig *Signature) Verify(pubKey PublicKey, data []byte) bool {
+	return ecdsa.Verify(pubKey.Key, data, sig.r, sig.s)
 }
