@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 type Validator interface {
 	ValidateBlock(*Block) error
 }
@@ -12,6 +14,12 @@ func NewBlockValidator(bc *Blockchain) *BlockValidator {
 	return &BlockValidator{bc: bc}
 }
 
-func (BlockValidator) ValidateBlock(block *Block) error {
+func (v *BlockValidator) ValidateBlock(b *Block) error {
+	if v.bc.HasBlock(b.Height) {
+		return fmt.Errorf("block already exists")
+	}
+	if err := b.Verify(); err != nil {
+		return err
+	}
 	return nil
 }
