@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-func RandomBlock(height uint32) *Block {
+func RandomBlock(height uint32, prevBlockHash types.Hash) *Block {
 	header := &Header{
 		Version:       1,
-		PrevBlockHash: types.RandomHash(),
+		PrevBlockHash: prevBlockHash,
 		Timestamp:     time.Now().UnixNano(),
 		Height:        height,
 	}
@@ -39,12 +39,12 @@ func RandomBlockWithSignature(t *testing.T, height uint32, prevBlockhash types.H
 }
 
 func TestHashBlock(t *testing.T) {
-	b := RandomBlock(1)
+	b := RandomBlock(1, types.Hash{})
 	fmt.Println(b.Hash(BlockHasher{}))
 }
 
 func TestSignBlock(t *testing.T) {
-	b := RandomBlock(1)
+	b := RandomBlock(1, types.Hash{})
 	privateKey := crypto.GeneratePrivateKey()
 	assert.Nil(t, b.Sign(privateKey))
 
