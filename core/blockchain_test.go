@@ -42,3 +42,5 @@ func getPrevBlockHash(t *testing.T, bc *Blockchain, height uint32) types.Hash {
 	assert.Nil(t, err)
 	return BlockHasher{}.Hash(prevHeader)
 }
+
+//sai cho nay
