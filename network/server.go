@@ -2,24 +2,28 @@ package network
 
 import (
 	"fmt"
+	"github.com/thongcao2603/blockchain_v1/crypto"
 	"time"
 )
 
 type ServerOpts struct {
 	Transports []Transport
+	PrivateKey *crypto.PrivateKey
 }
 
 type Server struct {
 	ServerOpts
-	rpcCh  chan RPC
-	quitCh chan struct{}
+	isValidator bool
+	rpcCh       chan RPC
+	quitCh      chan struct{}
 }
 
 func NewServer(opts ServerOpts) *Server {
 	return &Server{
-		ServerOpts: opts,
-		rpcCh:      make(chan RPC),
-		quitCh:     make(chan struct{}, 1),
+		ServerOpts:  opts,
+		isValidator: opts.PrivateKey != nil,
+		rpcCh:       make(chan RPC),
+		quitCh:      make(chan struct{}, 1),
 	}
 }
 func (s *Server) Start() error {
@@ -30,7 +34,7 @@ free:
 	for {
 		select {
 		case rpc := <-s.rpcCh:
-			fmt.Println("%+v", rpc)
+			fmt.Printf("%+v", rpc)
 		case <-s.quitCh:
 			break free
 		case <-ticker.C:

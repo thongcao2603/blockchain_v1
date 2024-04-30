@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"github.com/thongcao2603/blockchain_v1/crypto"
+	"github.com/thongcao2603/blockchain_v1/types"
 )
 
 type Transaction struct {
@@ -10,6 +11,16 @@ type Transaction struct {
 
 	From      crypto.PublicKey
 	Signature *crypto.Signature
+}
+
+func NewTransaction(data []byte) *Transaction {
+	return &Transaction{
+		Data: data,
+	}
+}
+
+func (tx *Transaction) Hash(hasher Hasher[*Transaction]) types.Hash {
+	return hasher.Hash(tx)
 }
 
 func (tx *Transaction) Sign(privateKey crypto.PrivateKey) error {
