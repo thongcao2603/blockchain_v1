@@ -19,11 +19,11 @@ func (v *BlockValidator) ValidateBlock(b *Block) error {
 		return fmt.Errorf("block already exists")
 	}
 
-	if b.Height != v.bc.Height() {
-		return fmt.Errorf("invalid height")
+	if b.Height != v.bc.Height()+1 {
+		return fmt.Errorf("invalid height %d %d", b.Height, v.bc.Height())
 	}
 
-	prevHeader, err := v.bc.GetHeader(b.Height)
+	prevHeader, err := v.bc.GetHeader(b.Height - 1)
 	if err != nil {
 		return err
 	}

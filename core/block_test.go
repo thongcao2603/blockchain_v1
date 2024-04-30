@@ -11,10 +11,10 @@ import (
 
 func RandomBlock(height uint32) *Block {
 	header := &Header{
-		Height:        height,
 		Version:       1,
 		PrevBlockHash: types.RandomHash(),
 		Timestamp:     time.Now().UnixNano(),
+		Height:        height,
 	}
 	tx := Transaction{
 		Data: []byte("foo"),
@@ -22,11 +22,11 @@ func RandomBlock(height uint32) *Block {
 	return NewBlock(header, []Transaction{tx})
 }
 
-func RandomBlockWithSignature(t *testing.T, height uint32) *Block {
+func RandomBlockWithSignature(t *testing.T, height uint32, prevBlockhash types.Hash) *Block {
 	header := &Header{
 		Height:        height,
 		Version:       1,
-		PrevBlockHash: types.RandomHash(),
+		PrevBlockHash: prevBlockhash,
 		Timestamp:     time.Now().UnixNano(),
 	}
 	tx := Transaction{
