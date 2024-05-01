@@ -2,25 +2,33 @@ package network
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"github.com/thongcao2603/blockchain_v1/core"
 	"github.com/thongcao2603/blockchain_v1/crypto"
 	"time"
 )
 
 type ServerOpts struct {
 	Transports []Transport
+	BlockTime  time.Duration
 	PrivateKey *crypto.PrivateKey
 }
 
 type Server struct {
 	ServerOpts
+	blockTime   time.Duration
+	memPool     *TxPool
 	isValidator bool
 	rpcCh       chan RPC
 	quitCh      chan struct{}
 }
 
 func NewServer(opts ServerOpts) *Server {
+
 	return &Server{
 		ServerOpts:  opts,
+		blockTime:   opts.BlockTime,
+		memPool:     NewTxPool(),
 		isValidator: opts.PrivateKey != nil,
 		rpcCh:       make(chan RPC),
 		quitCh:      make(chan struct{}, 1),
@@ -28,7 +36,7 @@ func NewServer(opts ServerOpts) *Server {
 }
 func (s *Server) Start() error {
 	s.initTransports()
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(s.blockTime)
 
 free:
 	for {
@@ -38,10 +46,37 @@ free:
 		case <-s.quitCh:
 			break free
 		case <-ticker.C:
-			fmt.Println("do something")
+			if s.isValidator {
+				s.createNewBlock()
+			}
 		}
 	}
 
+	return nil
+}
+
+func (s *Server) handleTransaction(tx *core.Transaction) error {
+	if err := tx.Verify(); err != nil {
+		return err
+	}
+
+	hash := tx.Hash(core.TxHasher{})
+	if s.memPool.Has(hash) {
+		logrus.WithFields(logrus.Fields{
+			"hash": hash,
+		}).Info("mempool already has transaction")
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"hash": hash,
+	}).Info("adding new transaction to mempool")
+
+	s.memPool.Add(tx)
+	return nil
+}
+
+func (s *Server) createNewBlock() error {
+	fmt.Println("create new block")
 	return nil
 }
 
