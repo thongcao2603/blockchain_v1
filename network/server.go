@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+var defaultBlockTime = 5 * time.Second
+
 type ServerOpts struct {
 	Transports []Transport
 	BlockTime  time.Duration
@@ -24,7 +26,9 @@ type Server struct {
 }
 
 func NewServer(opts ServerOpts) *Server {
-
+	if opts.BlockTime == time.Duration(0) {
+		opts.BlockTime = defaultBlockTime
+	}
 	return &Server{
 		ServerOpts:  opts,
 		blockTime:   opts.BlockTime,
@@ -42,7 +46,7 @@ free:
 	for {
 		select {
 		case rpc := <-s.rpcCh:
-			fmt.Printf("%+v", rpc)
+			fmt.Printf("%+v\n", rpc)
 		case <-s.quitCh:
 			break free
 		case <-ticker.C:

@@ -14,12 +14,12 @@ type PrivateKey struct {
 }
 
 func (k *PrivateKey) Sign(data []byte) (*Signature, error) {
-	r, s, err := ecdsa.Sign(rand.Reader, k.Key, data)
+	R, S, err := ecdsa.Sign(rand.Reader, k.Key, data)
 	if err != nil {
 		return nil, err
 	}
 	return &Signature{
-		r, s,
+		R: R, S: S,
 	}, nil
 }
 
@@ -53,9 +53,9 @@ func (k PublicKey) Address() types.Address {
 }
 
 type Signature struct {
-	r, s *big.Int
+	S, R *big.Int
 }
 
 func (sig *Signature) Verify(pubKey PublicKey, data []byte) bool {
-	return ecdsa.Verify(pubKey.Key, data, sig.r, sig.s)
+	return ecdsa.Verify(pubKey.Key, data, sig.R, sig.S)
 }

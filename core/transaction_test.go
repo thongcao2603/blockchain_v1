@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"github.com/thongcao2603/blockchain_v1/crypto"
 	"testing"
@@ -42,4 +43,14 @@ func randomTxWithSignature(t *testing.T) *Transaction {
 	assert.Nil(t, tx.Sign(privateKey))
 	return tx
 
+}
+
+func TestEncodeDecodeTransaction(t *testing.T) {
+	tx := randomTxWithSignature(t)
+	buf := &bytes.Buffer{}
+	assert.Nil(t, tx.Encode(NewGobTxEncoder(buf)))
+
+	//tr := new(Transaction)
+	//assert.Nil(t, tr.Decode(NewGobTxDecoder(buf)))
+	//assert.Equal(t, tr, tx)
 }
