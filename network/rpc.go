@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/thongcao2603/blockchain_v1/core"
 	"io"
 )
@@ -50,6 +51,11 @@ func DefaultRPCDecodeFunc(rpc RPC) (*DecodedMessage, error) {
 	if err := gob.NewDecoder(rpc.Payload).Decode(&msg); err != nil {
 		return nil, fmt.Errorf("failed to decode message: %v", err)
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"from": rpc.From,
+		"type": msg.Header,
+	}).Debug("new incomming message")
 
 	switch msg.Header {
 	case MessageTypeTx:

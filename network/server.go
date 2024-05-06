@@ -1,6 +1,7 @@
 package network
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/thongcao2603/blockchain_v1/core"
@@ -77,10 +78,20 @@ free:
 }
 
 func (s *Server) ProcessMessage(msg *DecodedMessage) error {
+
 	switch t := msg.Data.(type) {
 	case *core.Transaction:
 		return s.processTransaction(t)
 
+	}
+	return nil
+}
+
+func (s *Server) broadcast(payload []byte) error {
+	for _, tr := range s.Transports {
+		if err := tr.Broadcast(payload); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -108,6 +119,15 @@ func (s *Server) processTransaction(tx *core.Transaction) error {
 
 	return s.memPool.Add(tx)
 
+}
+
+func (s *Server) broadcastTx(tx *core.Transaction) error {
+	buf := &bytes.Buffer{}
+	if err := tx.Encode(core.NewGobTxEncoder(buf)); err != nil {
+		return err
+	}
+	msg := NewMessage(MessageTypeTx, buf.Bytes())
+	return s.broadcast(msg.Bytes())
 }
 
 func (s *Server) createNewBlock() error {
