@@ -6,6 +6,7 @@ import (
 	"github.com/thongcao2603/blockchain_v1/core"
 	"github.com/thongcao2603/blockchain_v1/crypto"
 	"github.com/thongcao2603/blockchain_v1/network"
+	"log"
 	"math/rand"
 	"strconv"
 	"time"
@@ -30,11 +31,18 @@ func main() {
 			time.Sleep(1 * time.Second)
 		}
 	}()
+
+	privKey := crypto.GeneratePrivateKey()
 	opts := network.ServerOpts{
+		PrivateKey: &privKey,
+		ID:         "LOCAL",
 		Transports: []network.Transport{trLocal},
 	}
 
-	s := network.NewServer(opts)
+	s, err := network.NewServer(opts)
+	if err != nil {
+		log.Fatal(err)
+	}
 	s.Start()
 }
 

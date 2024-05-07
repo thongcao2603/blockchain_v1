@@ -3,15 +3,19 @@ package network
 import (
 	"bytes"
 	"fmt"
+	"github.com/go-kit/log"
 	"github.com/sirupsen/logrus"
 	"github.com/thongcao2603/blockchain_v1/core"
 	"github.com/thongcao2603/blockchain_v1/crypto"
+	"os"
 	"time"
 )
 
 var defaultBlockTime = 5 * time.Second
 
 type ServerOpts struct {
+	ID            string
+	Logger        log.Logger
 	RPCDecodeFunc RPCDecodeFunc
 	RPCProcessor  RPCProcessor
 	Transports    []Transport
@@ -22,12 +26,13 @@ type ServerOpts struct {
 type Server struct {
 	ServerOpts
 	memPool     *TxPool
+	chain       *core.Blockchain
 	isValidator bool
 	rpcCh       chan RPC
 	quitCh      chan struct{}
 }
 
-func NewServer(opts ServerOpts) *Server {
+func NewServer(opts ServerOpts) (*Server, error) {
 
 	if opts.BlockTime == time.Duration(0) {
 		opts.BlockTime = defaultBlockTime
@@ -35,9 +40,20 @@ func NewServer(opts ServerOpts) *Server {
 	if opts.RPCDecodeFunc == nil {
 		opts.RPCDecodeFunc = DefaultRPCDecodeFunc
 	}
+
+	if opts.Logger == nil {
+		opts.Logger = log.NewLogfmtLogger(os.Stderr)
+		opts.Logger = log.With(opts.Logger, "ID", opts.ID)
+	}
+
+	chain, err := core.NewBlockchain(new(core.Block))
+	if err != nil {
+		return nil, err
+	}
 	s := &Server{
 		ServerOpts:  opts,
 		memPool:     NewTxPool(),
+		chain:       chain,
 		isValidator: opts.PrivateKey != nil,
 		rpcCh:       make(chan RPC),
 		quitCh:      make(chan struct{}, 1),
@@ -61,7 +77,7 @@ free:
 		case rpc := <-s.rpcCh:
 			msg, err := s.RPCDecodeFunc(rpc)
 			if err != nil {
-				logrus.Error(err)
+				s.Logger.Log("error", err)
 			}
 
 			if err := s.RPCProcessor.ProcessMessage(msg); err != nil {
@@ -73,11 +89,13 @@ free:
 		}
 	}
 
-	fmt.Println("Server shutdown")
+	s.Logger.Log("msg", "Server is shutting down")
 }
 
 func (s *Server) validatorLoop() {
 	ticket := time.NewTicker(s.BlockTime)
+
+	s.Logger.Log("msg", "Starting validator loop", "blockTime", s.BlockTime)
 	for {
 		<-ticket.C
 		s.createNewBlock()
@@ -107,9 +125,6 @@ func (s *Server) processTransaction(tx *core.Transaction) error {
 
 	hash := tx.Hash(core.TxHasher{})
 	if s.memPool.Has(hash) {
-		logrus.WithFields(logrus.Fields{
-			"hash": hash,
-		}).Info("mempool already has transaction")
 		return nil
 	}
 
@@ -119,11 +134,13 @@ func (s *Server) processTransaction(tx *core.Transaction) error {
 
 	tx.SetFirstSeen(time.Now().UnixNano())
 
-	logrus.WithFields(logrus.Fields{
-		"hash":           hash,
-		"mempool length": s.memPool.Len(),
-	}).Info("adding new transaction to mempool")
+	s.Logger.Log(
+		"msg",
+		"adding new tx to mempool",
+		"hash", hash,
+		"mempoolLength", s.memPool.Len())
 
+	go s.broadcastTx(tx)
 	return s.memPool.Add(tx)
 
 }
@@ -137,11 +154,6 @@ func (s *Server) broadcastTx(tx *core.Transaction) error {
 	return s.broadcast(msg.Bytes())
 }
 
-func (s *Server) createNewBlock() error {
-	fmt.Println("create new block")
-	return nil
-}
-
 func (s *Server) initTransports() error {
 	for _, tr := range s.Transports {
 		go func(tr Transport) {
@@ -150,5 +162,10 @@ func (s *Server) initTransports() error {
 			}
 		}(tr)
 	}
+	return nil
+}
+
+func (s *Server) createNewBlock() error {
+	fmt.Println("create new block")
 	return nil
 }
