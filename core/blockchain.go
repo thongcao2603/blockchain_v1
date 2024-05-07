@@ -67,5 +67,6 @@ func (bc *Blockchain) addBlockWithoutValidation(b *Block) error {
 		"height": b.Height,
 		"hash":   b.Hash(BlockHasher{}),
 	}).Info("adding new block")
+
 	return bc.store.Put(b)
 }

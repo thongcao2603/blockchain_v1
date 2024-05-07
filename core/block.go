@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/thongcao2603/blockchain_v1/crypto"
 	"github.com/thongcao2603/blockchain_v1/types"
+	"time"
 )
 
 type Header struct {
@@ -41,6 +42,23 @@ func NewBlock(header *Header, transactions []Transaction) *Block {
 	}
 }
 
+func NewBlockFromPrevHeader(prevHeader *Header, txx []Transaction) (*Block, error) {
+	dataHash, err := CalculateDataHash(txx)
+	if err != nil {
+		return nil, err
+	}
+
+	header := &Header{
+		Version:       1,
+		Height:        prevHeader.Height + 1,
+		DataHash:      dataHash,
+		PrevBlockHash: BlockHasher{}.Hash(prevHeader),
+		Timestamp:     time.Now().UnixNano(),
+	}
+
+	return NewBlock(header, txx), nil
+}
+
 func (b *Block) AddTransaction(tx *Transaction) {
 	b.Transactions = append(b.Transactions, *tx)
 }
@@ -68,7 +86,10 @@ func (b *Block) Verify() error {
 		}
 	}
 
-	dataHash := CalculateDataHash(b.Transactions)
+	dataHash, err := CalculateDataHash(b.Transactions)
+	if err != nil {
+		return err
+	}
 	if dataHash != b.DataHash {
 		return fmt.Errorf("data hash is invalid")
 	}

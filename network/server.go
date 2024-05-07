@@ -2,11 +2,11 @@ package network
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/go-kit/log"
 	"github.com/sirupsen/logrus"
 	"github.com/thongcao2603/blockchain_v1/core"
 	"github.com/thongcao2603/blockchain_v1/crypto"
+	"github.com/thongcao2603/blockchain_v1/types"
 	"os"
 	"time"
 )
@@ -46,7 +46,7 @@ func NewServer(opts ServerOpts) (*Server, error) {
 		opts.Logger = log.With(opts.Logger, "ID", opts.ID)
 	}
 
-	chain, err := core.NewBlockchain(new(core.Block))
+	chain, err := core.NewBlockchain(genesisBlock())
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func NewServer(opts ServerOpts) (*Server, error) {
 		go s.validatorLoop()
 	}
 
-	return s
+	return s, nil
 }
 func (s *Server) Start() {
 	s.initTransports()
@@ -166,6 +166,30 @@ func (s *Server) initTransports() error {
 }
 
 func (s *Server) createNewBlock() error {
-	fmt.Println("create new block")
+	currentHeader, err := s.chain.GetHeader(s.chain.Height())
+	if err != nil {
+		return err
+	}
+
+	block, err := core.NewBlockFromPrevHeader(currentHeader, nil)
+	if err != nil {
+		return err
+	}
+
+	if err := s.chain.AddBlock(block); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func genesisBlock() *core.Block {
+	header := &core.Header{
+		Version:   1,
+		DataHash:  types.Hash{},
+		Height:    0,
+		Timestamp: time.Now().UnixNano(),
+	}
+
+	return core.NewBlock(header, nil)
 }
